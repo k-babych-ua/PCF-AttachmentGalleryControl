@@ -1,57 +1,57 @@
-import {IInputs, IOutputs} from "./generated/ManifestTypes";
+import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import { saveAs } from 'file-saver';
 
 interface Attachment {
-	documentBody: string;
-	mimeType: string;
-	title: string;
-	noteText: string;
-	id: string;
-	filename: string;
+    documentBody: string;
+    mimeType: string;
+    title: string;
+    noteText: string;
+    id: string;
+    filename: string;
 }
 
 interface IModalState {
-	isOpen: boolean,
-	isPdfViewerOpen: boolean
+    isOpen: boolean,
+    isPdfViewerOpen: boolean
 }
 
 interface IPdfState {
-	pdf: any,
-	currentPage: number,
-	zoom: number
+    pdf: any,
+    currentPage: number,
+    zoom: number
 }
 
 export class AttachmentGallery implements ComponentFramework.StandardControl<IInputs, IOutputs> {
     private _previewImg: HTMLImageElement;
-	private _thumbnailsGallery: HTMLDivElement;
-	private _container: HTMLDivElement;
-	private _context: ComponentFramework.Context<IInputs>;
-	private _currentIndex: number;
-	private _notes: Attachment[];
-	private _modalContainer: HTMLDivElement;
-	private _modalContentContainer: HTMLDivElement;
-	private _modalHeaderText: HTMLHeadingElement;
-	private _modalImage: HTMLImageElement;
-	private _noteText: HTMLParagraphElement;
-	private _noteTextContainer: HTMLDivElement;
-	private _pdfCanvas: HTMLCanvasElement;
-	private pdfState: IPdfState;
-	private modalState: IModalState;
-	private _pdfViewerContainer: HTMLDivElement;
-	private _modalImageContainer: HTMLDivElement;
-	private _pdfPageInput: HTMLInputElement;
-	private _pdfTotalPages: HTMLSpanElement;
-	private _pdfPageControlsContainer: HTMLDivElement;
-	private _imageViewerContainer: HTMLDivElement;
-	private pdfImageSrc: string;
-	private _mainDivContainer: HTMLDivElement;
-	private _notFoundContainer: HTMLDivElement;
+    private _thumbnailsGallery: HTMLDivElement;
+    private _filenamePlaceholder: HTMLDivElement;
+    private _container: HTMLDivElement;
+    private _context: ComponentFramework.Context<IInputs>;
+    private _currentIndex: number;
+    private _notes: Attachment[];
+    private _modalContainer: HTMLDivElement;
+    private _modalContentContainer: HTMLDivElement;
+    private _modalHeaderText: HTMLHeadingElement;
+    private _modalImage: HTMLImageElement;
+    private _noteText: HTMLParagraphElement;
+    private _noteTextContainer: HTMLDivElement;
+    private _pdfCanvas: HTMLCanvasElement;
+    private pdfState: IPdfState;
+    private modalState: IModalState;
+    private _pdfViewerContainer: HTMLDivElement;
+    private _modalImageContainer: HTMLDivElement;
+    private _pdfPageInput: HTMLInputElement;
+    private _pdfTotalPages: HTMLSpanElement;
+    private _pdfPageControlsContainer: HTMLDivElement;
+    private _imageViewerContainer: HTMLDivElement;
+    private pdfImageSrc: string;
+    private _mainDivContainer: HTMLDivElement;
+    private _notFoundContainer: HTMLDivElement;
 
     /**
      * Empty constructor.
      */
-    constructor()
-    {
+    constructor() {
 
     }
 
@@ -63,306 +63,319 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
      * @param state A piece of data that persists in one session for a single user. Can be set at any point in a controls life cycle by calling 'setControlState' in the Mode interface.
      * @param container If a control is marked control-type='standard', it will receive an empty div element within which it can render its content.
      */
-    public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, state: ComponentFramework.Dictionary, container:HTMLDivElement): void
-    {
+    public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: () => void, state: ComponentFramework.Dictionary, container: HTMLDivElement): void {
         this._notes = [];
-		this._context = context;
-		this.setPreview = this.setPreview.bind(this);
-		this.openModal = this.openModal.bind(this);
-		this.closeModal = this.closeModal.bind(this);
-		this.changeImage = this.changeImage.bind(this);
-		this.setPreviewFromThumbnail = this.setPreviewFromThumbnail.bind(this);
-		this.toggleNoteColumn = this.toggleNoteColumn.bind(this);
-		this.generateImageSrcUrl = this.generateImageSrcUrl.bind(this);
-		//this.GetAttachmentsDemo = this.GetAttachmentsDemo.bind(this);
-		this.b64toBlob = this.b64toBlob.bind(this);
-		this.downloadFile = this.downloadFile.bind(this);
-		this.setPdfViewer = this.setPdfViewer.bind(this);
-		this.pdfRender = this.pdfRender.bind(this);
-		this.togglePdfViwer = this.togglePdfViwer.bind(this);
-		this.setModalImage = this.setModalImage.bind(this);
-		this.changePdfPage = this.changePdfPage.bind(this);
-		this.zoomPdfPage = this.zoomPdfPage.bind(this);
-		this.setPdfPage = this.setPdfPage.bind(this);
+        this._context = context;
+        this.setPreview = this.setPreview.bind(this);
+        this.openModal = this.openModal.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+        this.changeImage = this.changeImage.bind(this);
+        this.setPreviewFromThumbnail = this.setPreviewFromThumbnail.bind(this);
+        this.toggleNoteColumn = this.toggleNoteColumn.bind(this);
+        this.generateImageSrcUrl = this.generateImageSrcUrl.bind(this);
+        //this.GetAttachmentsDemo = this.GetAttachmentsDemo.bind(this);
+        this.b64toBlob = this.b64toBlob.bind(this);
+        this.downloadFile = this.downloadFile.bind(this);
+        this.setPdfViewer = this.setPdfViewer.bind(this);
+        this.pdfRender = this.pdfRender.bind(this);
+        this.togglePdfViwer = this.togglePdfViwer.bind(this);
+        this.setModalImage = this.setModalImage.bind(this);
+        this.changePdfPage = this.changePdfPage.bind(this);
+        this.zoomPdfPage = this.zoomPdfPage.bind(this);
+        this.setPdfPage = this.setPdfPage.bind(this);
 
-		this._context.resources.getResource('img/pdf_icon.png',
-						this.setPdfImage.bind(this), this.showError.bind(this,"ERROR with PDF Image!"));
+        this._context.resources.getResource('img/pdf_icon.png',
+            this.setPdfImage.bind(this), this.showError.bind(this, "ERROR with PDF Image!"));
 
-		this.modalState = {
-			isOpen: false,
-			isPdfViewerOpen: false
-		}
+        this.modalState = {
+            isOpen: false,
+            isPdfViewerOpen: false
+        }
 
-		this.pdfState = {
-			pdf: null,
-			currentPage: 1,
-			zoom: 1
-		}
+        this.pdfState = {
+            pdf: null,
+            currentPage: 1,
+            zoom: 1
+        }
 
-		this._container = document.createElement('div');
+        this._container = document.createElement('div');
 
-		//--------- Attachments not found placeholder
-		this._notFoundContainer = document.createElement('div');
+        //--------- Attachments not found placeholder
+        this._notFoundContainer = document.createElement('div');
 
-		let refreshIcon = document.createElement('i');
-		refreshIcon.className = 'dwc-top-right ms-Icon ms-Icon--Refresh';
+        let refreshIcon = document.createElement('i');
+        refreshIcon.className = 'dwc-top-right ms-Icon ms-Icon--Refresh';
 
-		this._notFoundContainer.appendChild(refreshIcon);
+        this._notFoundContainer.appendChild(refreshIcon);
 
-		let notFoundText = document.createElement('p');
-		notFoundText.classList.add('dwc-center');
-		notFoundText.innerText = 'Attachments not found. Press Refresh to try to load them again.';
+        let notFoundText = document.createElement('p');
+        notFoundText.classList.add('dwc-center');
+        notFoundText.innerText = 'Attachments not found. Press Refresh to try to load them again.';
 
-		this._notFoundContainer.appendChild(notFoundText);
+        this._notFoundContainer.appendChild(notFoundText);
 
-		this._container.appendChild(this._notFoundContainer);
+        this._container.appendChild(this._notFoundContainer);
 
-		let mainContainer = document.createElement('div');
-		mainContainer.classList.add('main-container','dwc-hide');
+        let mainContainer = document.createElement('div');
+        mainContainer.classList.add('main-container', 'dwc-hide');
 
-		this._mainDivContainer = mainContainer;
+        this._mainDivContainer = mainContainer;
 
-		//-------- creating thumbnails
-		this._thumbnailsGallery = document.createElement("div");
-		this._thumbnailsGallery.classList.add('thumbnailsList');
+        //-------- creating thumbnails
+        this._thumbnailsGallery = document.createElement("div");
+        this._thumbnailsGallery.classList.add('thumbnailsList');
 
-		//-------- creating preview section
-		let bigPreview = document.createElement("div");
-		bigPreview.classList.add('preview-section');
+        //filename placeholder
+        this._filenamePlaceholder = document.createElement("div");
+        this._filenamePlaceholder.classList.add('filenamePlaceholder');
 
-		this._previewImg = document.createElement('img');
-		this._previewImg.classList.add('preview-img');
-		this._previewImg.onclick = () => this.openModal();
-		bigPreview.appendChild(this._previewImg);
+        //-------- creating preview section
+        let bigPreview = document.createElement("div");
+        bigPreview.classList.add('preview-section');
 
-		//-------- prev and next buttons
-		let next = document.createElement('a');
-		next.classList.add('arrow-button', 'preview-next');
-		next.innerHTML = "&#10095;";
-		next.onclick = () => this.changeImage(1);
+        this._previewImg = document.createElement('img');
+        this._previewImg.classList.add('preview-img');
+        this._previewImg.onclick = () => this.openModal();
+        bigPreview.appendChild(this._previewImg);
 
-		let prev = document.createElement('a');
-		prev.classList.add('arrow-button', 'preview-prev');
-		prev.innerHTML = "&#10094;";
-		prev.onclick = () => this.changeImage(-1);
+        //-------- prev and next buttons
+        let next = document.createElement('a');
+        next.classList.add('arrow-button', 'preview-next');
+        next.innerHTML = "&#10095;";
+        next.onclick = () => this.changeImage(1);
 
-		bigPreview.appendChild(prev);
-		bigPreview.appendChild(next);
+        let prev = document.createElement('a');
+        prev.classList.add('arrow-button', 'preview-prev');
+        prev.innerHTML = "&#10094;";
+        prev.onclick = () => this.changeImage(-1);
 
-		mainContainer.appendChild(bigPreview);
-		mainContainer.appendChild(this._thumbnailsGallery);
+        bigPreview.appendChild(prev);
+        bigPreview.appendChild(next);
 
-		this._container.appendChild(mainContainer);
+        mainContainer.appendChild(bigPreview);
+        mainContainer.appendChild(this._filenamePlaceholder);
+        mainContainer.appendChild(this._thumbnailsGallery);
 
-		container.appendChild(this._container);
+        this._container.appendChild(mainContainer);
 
-		//--------- create modal
+        container.appendChild(this._container);
 
-		this._modalContainer = document.createElement('div');
-		this._modalContainer.classList.add('dwc-modal');
+        //--------- create modal
 
-		let modalContent = document.createElement('div');
-		modalContent.classList.add('dwc-modal-content');
+        this._modalContainer = document.createElement('div');
+        this._modalContainer.classList.add('dwc-modal');
 
-		this._modalContentContainer = modalContent;
+        let modalContent = document.createElement('div');
+        modalContent.classList.add('dwc-modal-content');
 
-		//--------- create modal header
-		let modalHeader = document.createElement('div');
-		modalHeader.classList.add('dwc-modal-header');
+        this._modalContentContainer = modalContent;
 
-		//--------- create pdf controls
-		let pdfControlsContainer = document.createElement('div');
+        //--------- create modal header
+        let modalHeader = document.createElement('div');
+        modalHeader.classList.add('dwc-modal-header');
 
-		pdfControlsContainer.classList.add('dwc-flex-container', 'dwc-pageinput-container', 'dwc-hide');
+        //--------- create pdf controls
+        let pdfControlsContainer = document.createElement('div');
 
-		let prevPdfPageIcon = document.createElement('i');
-		prevPdfPageIcon.className = "header-icon ms-Icon ms-Icon--ChevronLeft";
-		prevPdfPageIcon.addEventListener('click', () => this.changePdfPage(-1));
+        pdfControlsContainer.classList.add('dwc-flex-container', 'dwc-pageinput-container', 'dwc-hide');
 
-		pdfControlsContainer.appendChild(prevPdfPageIcon);
+        let prevPdfPageIcon = document.createElement('i');
+        prevPdfPageIcon.className = "header-icon ms-Icon ms-Icon--ChevronLeft";
+        prevPdfPageIcon.addEventListener('click', () => this.changePdfPage(-1));
 
-		let pdfPageNumberContainer = document.createElement('div');
+        pdfControlsContainer.appendChild(prevPdfPageIcon);
 
-		let pdfPageInput = document.createElement('input');
-		pdfPageInput.value = '1';
-		pdfPageInput.className = 'dwc-page-input';
-		pdfPageInput.addEventListener('keypress', (e) => this.setPdfPage(e));
+        let pdfPageNumberContainer = document.createElement('div');
 
-		pdfPageNumberContainer.appendChild(pdfPageInput);
+        let pdfPageInput = document.createElement('input');
+        pdfPageInput.value = '1';
+        pdfPageInput.className = 'dwc-page-input';
+        pdfPageInput.addEventListener('keypress', (e) => this.setPdfPage(e));
 
-		this._pdfPageInput = pdfPageInput;
+        pdfPageNumberContainer.appendChild(pdfPageInput);
 
-		let totalPagesSpan = document.createElement('span');
-		totalPagesSpan.innerHTML = " / 0";
-		totalPagesSpan.className = 'dwc-page-span';
+        this._pdfPageInput = pdfPageInput;
 
-		pdfPageNumberContainer.appendChild(totalPagesSpan);
+        let totalPagesSpan = document.createElement('span');
+        totalPagesSpan.innerHTML = " / 0";
+        totalPagesSpan.className = 'dwc-page-span';
 
-		this._pdfTotalPages = totalPagesSpan;
+        pdfPageNumberContainer.appendChild(totalPagesSpan);
 
-		pdfControlsContainer.appendChild(pdfPageNumberContainer);
+        this._pdfTotalPages = totalPagesSpan;
 
-		let nextPdfPageIcon = document.createElement('i');
-		nextPdfPageIcon.className = "header-icon ms-Icon ms-Icon--ChevronRight";
-		nextPdfPageIcon.addEventListener('click', () => this.changePdfPage(1));
+        pdfControlsContainer.appendChild(pdfPageNumberContainer);
 
-		pdfControlsContainer.appendChild(nextPdfPageIcon);
+        let nextPdfPageIcon = document.createElement('i');
+        nextPdfPageIcon.className = "header-icon ms-Icon ms-Icon--ChevronRight";
+        nextPdfPageIcon.addEventListener('click', () => this.changePdfPage(1));
 
-		let zoomControlsContainer = document.createElement('div');
-		zoomControlsContainer.className = 'dwc-zoom-container';
+        pdfControlsContainer.appendChild(nextPdfPageIcon);
 
-		let zoomText = document.createElement('span');
-		zoomText.style.color = 'white';
-		zoomText.innerHTML = 'Zoom: ';
+        let zoomControlsContainer = document.createElement('div');
+        zoomControlsContainer.className = 'dwc-zoom-container';
 
-		let plusIcon = document.createElement('i');
-		plusIcon.className = "header-icon dwc-side-margin-4 ms-Icon ms-Icon--Add";
-		plusIcon.addEventListener('click', () => this.zoomPdfPage(0.2));
+        let zoomText = document.createElement('span');
+        zoomText.style.color = 'white';
+        zoomText.innerHTML = 'Zoom: ';
 
-		let minusIcon = document.createElement('i');
-		minusIcon.className = "header-icon dwc-side-margin-4 ms-Icon ms-Icon--Remove";
-		minusIcon.addEventListener('click', () => this.zoomPdfPage(-0.2));
+        let plusIcon = document.createElement('i');
+        plusIcon.className = "header-icon dwc-side-margin-4 ms-Icon ms-Icon--Add";
+        plusIcon.addEventListener('click', () => this.zoomPdfPage(0.2));
 
-		zoomControlsContainer.appendChild(zoomText);
-		zoomControlsContainer.appendChild(plusIcon);
-		zoomControlsContainer.appendChild(minusIcon);
+        let minusIcon = document.createElement('i');
+        minusIcon.className = "header-icon dwc-side-margin-4 ms-Icon ms-Icon--Remove";
+        minusIcon.addEventListener('click', () => this.zoomPdfPage(-0.2));
 
-		pdfControlsContainer.appendChild(zoomControlsContainer);
+        zoomControlsContainer.appendChild(zoomText);
+        zoomControlsContainer.appendChild(plusIcon);
+        zoomControlsContainer.appendChild(minusIcon);
 
-		this._pdfPageControlsContainer = pdfControlsContainer;
+        pdfControlsContainer.appendChild(zoomControlsContainer);
 
-		//---------- create modal buttons
-		let rightHeaderContainer = document.createElement('div');
+        this._pdfPageControlsContainer = pdfControlsContainer;
 
-		rightHeaderContainer.classList.add("header-icon-container");
+        //---------- create modal buttons
+        let rightHeaderContainer = document.createElement('div');
 
-		let downloadIcon = document.createElement('i');
-		downloadIcon.className = "header-icon ms-Icon ms-Icon--Download";
-		downloadIcon.addEventListener('click', this.downloadFile);
+        rightHeaderContainer.classList.add("header-icon-container");
 
-		rightHeaderContainer.appendChild(downloadIcon);
+        let downloadIcon = document.createElement('i');
+        downloadIcon.className = "header-icon ms-Icon ms-Icon--Download";
+        downloadIcon.addEventListener('click', this.downloadFile);
 
-		let infoIcon = document.createElement('i');
-		infoIcon.className = "header-icon ms-Icon ms-Icon--Info";
-		infoIcon.addEventListener('click', this.toggleNoteColumn);
+        rightHeaderContainer.appendChild(downloadIcon);
 
-		rightHeaderContainer.appendChild(infoIcon);
+        let infoIcon = document.createElement('i');
+        infoIcon.className = "header-icon ms-Icon ms-Icon--Info";
+        infoIcon.addEventListener('click', this.toggleNoteColumn);
 
-		let closeIcon = document.createElement('i');
-		closeIcon.className = "header-icon ms-Icon ms-Icon--ChromeClose";
-		closeIcon.addEventListener('click', this.closeModal);
+        rightHeaderContainer.appendChild(infoIcon);
 
-		rightHeaderContainer.appendChild(closeIcon);
+        let closeIcon = document.createElement('i');
+        closeIcon.className = "header-icon ms-Icon ms-Icon--ChromeClose";
+        closeIcon.addEventListener('click', this.closeModal);
 
-		//--------- create modal header text
-		let leftHeaderContainer = document.createElement('div');
+        rightHeaderContainer.appendChild(closeIcon);
 
-		let headerText = document.createElement('h3');
-		headerText.innerHTML = "0/10";
-		this._modalHeaderText = headerText;
+        //--------- create modal header text
+        let leftHeaderContainer = document.createElement('div');
 
-		leftHeaderContainer.appendChild(headerText);
+        let headerText = document.createElement('h3');
+        headerText.innerHTML = "0/10";
+        this._modalHeaderText = headerText;
 
-		modalHeader.appendChild(leftHeaderContainer);
-		modalHeader.appendChild(pdfControlsContainer);
-		modalHeader.appendChild(rightHeaderContainer);
+        leftHeaderContainer.appendChild(headerText);
 
-		modalContent.appendChild(modalHeader);
+        modalHeader.appendChild(leftHeaderContainer);
+        modalHeader.appendChild(pdfControlsContainer);
+        modalHeader.appendChild(rightHeaderContainer);
 
-		//--------- create modal body
+        modalContent.appendChild(modalHeader);
 
-		let modalBody = document.createElement('div');
-		modalBody.classList.add('dwc-modal-body');
+        //--------- create modal body
 
-		//--------- add prev/next buttons
+        let modalBody = document.createElement('div');
+        modalBody.classList.add('dwc-modal-body');
 
-		let nextImgModal = document.createElement('a');
-		nextImgModal.classList.add('arrow-button', 'preview-next');
-		nextImgModal.innerHTML = "&#10095;";
-		nextImgModal.onclick = () => this.changeImage(1);
+        //--------- add prev/next buttons
 
-		let prevImgModal = document.createElement('a');
-		prevImgModal.classList.add('arrow-button', 'preview-prev');
-		prevImgModal.innerHTML = "&#10094;";
-		prevImgModal.onclick = () => this.changeImage(-1);
+        let nextImgModal = document.createElement('a');
+        nextImgModal.classList.add('arrow-button', 'preview-next');
+        nextImgModal.innerHTML = "&#10095;";
+        nextImgModal.onclick = () => this.changeImage(1);
 
-		modalBody.appendChild(nextImgModal);
-		modalBody.appendChild(prevImgModal);
+        let prevImgModal = document.createElement('a');
+        prevImgModal.classList.add('arrow-button', 'preview-prev');
+        prevImgModal.innerHTML = "&#10094;";
+        prevImgModal.onclick = () => this.changeImage(-1);
 
-		//--------- image container
+        modalBody.appendChild(nextImgModal);
+        modalBody.appendChild(prevImgModal);
 
-		let imageViewerContainer = document.createElement('div');
-		imageViewerContainer.className = 'dwc-flex-container';
+        //--------- image container
 
-		this._imageViewerContainer = imageViewerContainer;
+        let imageViewerContainer = document.createElement('div');
+        imageViewerContainer.className = 'dwc-flex-container';
 
-		modalBody.appendChild(imageViewerContainer);
+        this._imageViewerContainer = imageViewerContainer;
 
-		let modalImageContainer = document.createElement('div');
-		modalImageContainer.classList.add('dwc-modal-img-container');
+        modalBody.appendChild(imageViewerContainer);
 
-		this._modalImage = document.createElement('img');
-		this._modalImage.classList.add('dwc-modal-img');
+        let modalImageContainer = document.createElement('div');
+        modalImageContainer.classList.add('dwc-modal-img-container');
 
-		modalImageContainer.appendChild(this._modalImage);
-		imageViewerContainer.appendChild(modalImageContainer);
+        this._modalImage = document.createElement('img');
+        this._modalImage.classList.add('dwc-modal-img');
 
-		this._modalImageContainer = modalImageContainer;
+        modalImageContainer.appendChild(this._modalImage);
+        imageViewerContainer.appendChild(modalImageContainer);
 
-		//-------- create preview note container
+        this._modalImageContainer = modalImageContainer;
 
-		let modalNoteTextContainer = document.createElement('div');
-		modalNoteTextContainer.classList.add('dwc-modal-notetext-container', 'dwc-hide');
+        //-------- create preview note container
 
-		let noteText = document.createElement('p');
-		noteText.className = 'dwc-modal-notetext';
-		modalNoteTextContainer.appendChild(noteText);
+        let modalNoteTextContainer = document.createElement('div');
+        modalNoteTextContainer.classList.add('dwc-modal-notetext-container', 'dwc-hide');
 
-		this._noteText = noteText;
-		this._noteTextContainer = modalNoteTextContainer;
+        let noteText = document.createElement('p');
+        noteText.className = 'dwc-modal-notetext';
+        modalNoteTextContainer.appendChild(noteText);
 
-		imageViewerContainer.appendChild(modalNoteTextContainer);
+        this._noteText = noteText;
+        this._noteTextContainer = modalNoteTextContainer;
 
-		//--------- create pdf viewer container
+        imageViewerContainer.appendChild(modalNoteTextContainer);
 
-		let pdfViewerContainer = document.createElement('div');
-		pdfViewerContainer.classList.add('dwc-hide');
+        //--------- create pdf viewer container
 
-		let canvasContainer = document.createElement('div');
-		canvasContainer.className = 'dwc-pdf-canvas-container';
-		canvasContainer.id = "canvas_container";
+        let pdfViewerContainer = document.createElement('div');
+        pdfViewerContainer.classList.add('dwc-hide');
 
-		this._pdfCanvas = document.createElement('canvas');
-		this._pdfCanvas.id = "pdf_renderer";
+        let canvasContainer = document.createElement('div');
+        canvasContainer.className = 'dwc-pdf-canvas-container';
+        canvasContainer.id = "canvas_container";
 
-		canvasContainer.appendChild(this._pdfCanvas);
+        this._pdfCanvas = document.createElement('canvas');
+        this._pdfCanvas.id = "pdf_renderer";
 
-		pdfViewerContainer.appendChild(canvasContainer);
+        canvasContainer.appendChild(this._pdfCanvas);
 
-		modalBody.appendChild(pdfViewerContainer);
+        pdfViewerContainer.appendChild(canvasContainer);
 
-		this._pdfViewerContainer = pdfViewerContainer;
+        modalBody.appendChild(pdfViewerContainer);
 
-		modalContent.appendChild(modalBody);
-		this._modalContainer.appendChild(modalContent);
+        this._pdfViewerContainer = pdfViewerContainer;
 
-		document.body.appendChild(this._modalContainer);
+        modalContent.appendChild(modalBody);
+        this._modalContainer.appendChild(modalContent);
 
-		console.log("context", context);
+        document.body.appendChild(this._modalContainer);
 
-		let curentRecord: ComponentFramework.EntityReference = {
-			id: (<any>context).page.entityId,
-			name: (<any>context).page.entityTypeName
-		}
+        console.log("context", context);
 
-		console.log("curentRecord", curentRecord);
+        let curentRecord: ComponentFramework.EntityReference = {
+            id: (<any>context).page.entityId,
+            name: (<any>context).page.entityTypeName
+        }
 
-		const pdfScript = document.createElement('script');
-		pdfScript.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
+        console.log("curentRecord", curentRecord);
 
-		document.body.appendChild(pdfScript);
+        const pdfScript = document.createElement('script');
+        pdfScript.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
 
-		this.GetAttachments(curentRecord).then(result => this.CreateGallery(result));
+        document.body.appendChild(pdfScript);
+
+        console.log(`Related table name: ${JSON.stringify(this._context.parameters.RelatedTableName)}`);
+        console.log(`Related table column: ${JSON.stringify(this._context.parameters.RelatedTableColumn)}`);
+
+        if (this._context.parameters.RelatedTableName?.raw &&
+            this._context.parameters.RelatedTableColumn?.raw) {
+            this.GetAttachmentsFromMultipleRecords(curentRecord).then(result => this.CreateGallery(result));
+        }
+        else {
+            this.GetAttachments(curentRecord).then(result => this.CreateGallery(result));
+        }
     }
 
     /**
@@ -431,17 +444,91 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
         return this._notes;
     }
 
-    private setPdfImage(body:string){
-        this.pdfImageSrc = this.generateImageSrcUrl('image/png',body);
+    private async GetAttachmentsFromMultipleRecords(curentRecord: ComponentFramework.EntityReference): Promise<Attachment[]> {
+        console.log("GetAttachmentsFromMultipleRecords started");
+
+        const recordIds = await this.GetRecordIdsBasedOnProps(curentRecord);
+
+        if (recordIds?.length <= 0)
+        {
+            return [];
+        }
+
+        let filter = "$filter=(";
+
+        for (let id of recordIds) {
+            filter += `_objectid_value eq '${id}' or `;
+        }
+
+        filter = filter.substring(0, filter.length - 4);
+
+        filter += ")";
+
+        const searchQuery = "?$select=annotationid,documentbody,mimetype,notetext,subject,filename" +
+            `&${filter}` +
+            " and isdocument eq true and (startswith(mimetype, 'application/pdf') or startswith(mimetype, 'image/'))";
+        try {
+
+            const result = await this._context.webAPI.retrieveMultipleRecords("annotation", searchQuery);
+
+            console.log("Retrieved attachments", result);
+            if (result && result.entities) {
+                for (let index = 0; index < result.entities.length; index++) {
+
+                    let item: Attachment = {
+                        id: result.entities[index].id,
+                        mimeType: result.entities[index].mimetype,
+                        noteText: result.entities[index].notetext,
+                        title: result.entities[index].subject,
+                        filename: result.entities[index].filename,
+                        documentBody: result.entities[index].documentbody
+                    };
+                    this._notes.push(item);
+                }
+            }
+        } catch (error) {
+            console.error("ERROR RETRIEVING ATTACHMENT");
+            console.error(error);
+        }
+
+        return this._notes;
     }
 
-    private showError(text:string){
+    private async GetRecordIdsBasedOnProps(curentRecord: ComponentFramework.EntityReference): Promise<string[]> {
+        const relatedTableColumn = this._context.parameters.RelatedTableColumn?.raw || "";
+        const relatedTableName = this._context.parameters.RelatedTableName?.raw || "";
+        const relatedTableFilter = this._context.parameters.RelatedTableFilter?.raw || "";
+
+        if (!relatedTableColumn) {
+            throw Error("RelatedTableColumn property is required");
+        }
+
+        if (!relatedTableName) {
+            throw Error("RelatedTableName property is required");
+        }
+
+        const select = `$select=${relatedTableColumn}`;
+        const filter = `$filter=${relatedTableFilter} eq ${curentRecord.id}`;
+
+        const query = `?${select}&${filter}`;
+
+        const result = await this._context.webAPI.retrieveMultipleRecords(relatedTableName, query);
+
+        return result.entities.map(x => x[relatedTableColumn]);
+    }
+
+    private setPdfImage(body: string) {
+        this.pdfImageSrc = this.generateImageSrcUrl('image/png', body);
+    }
+
+    private showError(text: string) {
         console.error("ERROR:", text);
     }
 
     private CreateGallery(result: Attachment[]): any {
         console.log("Create Gallery Started");
         console.log("Notes: ", result);
+
         if (result.length > 0) {
             let count = 0;
             for (let i = 0; i < result.length; i++) {
@@ -461,7 +548,9 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
 
             this._currentIndex = 0;
             this.setPreview(0);
-        } 
+        }
+
+        this._filenamePlaceholder.innerHTML = result[0].filename;
     }
 
     private setPreviewFromThumbnail(e: Event) {
@@ -498,8 +587,7 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
             ? this.generateImageSrcUrl(currentNote.mimeType, currentNote.documentBody)
             : this.pdfImageSrc;
 
-        this._modalHeaderText.innerHTML = (currentNoteNumber + 1).toString() + " / " + this._notes.length.toString()
-            + " " + currentNote.title;
+        this._modalHeaderText.innerHTML = `${currentNoteNumber + 1} / ${this._notes.length} ${currentNote.title || ""}`;
 
         if (this.modalState.isOpen) {
             this.setModalImage(currentNote);
@@ -507,6 +595,8 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
 
         this._noteText.innerHTML = currentNote.noteText;
         this._currentIndex = currentNoteNumber;
+
+        this._filenamePlaceholder.innerHTML = this._notes[currentNoteNumber].filename;
     }
 
     private changeImage(moveIndex: number) {
@@ -642,8 +732,7 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
      * Called when any value in the property bag has changed. This includes field values, data-sets, global values such as container height and width, offline status, control metadata values such as label, visible, etc.
      * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
      */
-    public updateView(context: ComponentFramework.Context<IInputs>): void
-    {
+    public updateView(context: ComponentFramework.Context<IInputs>): void {
         // Add code to update control view
     }
 
@@ -651,8 +740,7 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
      * It is called by the framework prior to a control receiving new data.
      * @returns an object based on nomenclature defined in manifest, expecting object[s] for property marked as “bound” or “output”
      */
-    public getOutputs(): IOutputs
-    {
+    public getOutputs(): IOutputs {
         return {};
     }
 
@@ -660,8 +748,7 @@ export class AttachmentGallery implements ComponentFramework.StandardControl<IIn
      * Called when the control is to be removed from the DOM tree. Controls should use this call for cleanup.
      * i.e. cancelling any pending remote calls, removing listeners, etc.
      */
-    public destroy(): void
-    {
+    public destroy(): void {
         // Add code to cleanup control if necessary
     }
 }
